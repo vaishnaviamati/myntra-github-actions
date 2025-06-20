@@ -1,17 +1,21 @@
 name: Build, Analyze, and Scans
 
-on: push
+on: workflow_dispatch
   
 jobs:
-  build-analyze-scan:
-    name: Build, Analyze, and Scan
-    runs-on: [self-hosted]
+  Git-Checkout:
+    runs-on: [self-hosted, b11]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
+
+  Code-Analysis:
+    needs: Git-Checkout
+    runs-on: [self-hosted, b11]
+    steps:
       - name: Build and analyze with SonarQube
         uses: sonarsource/sonarqube-scan-action@master
         env:
@@ -21,13 +25,13 @@ jobs:
       - name: NPM Install
         run: npm install # Add your specific npm install command
 
+
+  Build-Push:
+    needs: Code-Analysis
+    runs-on: [self-hosted, b11]
+    steps:
       - name: Docker Login
         run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Docker Scout Scan
-        run: |
-          docker-scout quickview fs://.
-          docker-scout cves fs://.
 
       - name: Docker build and push
         run: |
@@ -39,16 +43,21 @@ jobs:
         env:
           DOCKER_CLI_ACI: 1
 
+
+  Image-Scan:
+    needs: Build-Push
+    runs-on: [self-hosted, b11]
+    steps:
       - name: Docker Scout Image Scan
         run: |
           docker-scout quickview prashant6749/myntra:latest
           docker-scout cves prashant6749/myntra:latest
 
   deploy:
-    needs: build-analyze-scan
-    runs-on: self-hosted # Use your self-hosted runner label here
+    needs: Image-Scan
+    runs-on: [self-hosted, b11] # Use your self-hosted runner label here
     steps:
       - name: Run the container
-        run: docker run -d --name myntra -p 3000:3000 sevenajay/myntra:latest
+        run: docker run -d --name myntra -p 3000:3000 prashant6749/myntra:latest
 
       
