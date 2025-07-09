@@ -1,63 +1,26 @@
-name: Build, Analyze, and Scans
+name: Build and Deploy
 
 on: workflow_dispatch
-  
+
 jobs:
-  Git-Checkout:
-    runs-on: [self-hosted, b11]
+  Build-and-Push:
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.set-tag.outputs.image_tag }}
     steps:
-      - name: Checkout code
+      - name: Checkout source code
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
+      - name: Set image tag from Git SHA
+        id: set-tag
+        run: echo "image_tag=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
 
-  Code-Analysis:
-    needs: Git-Checkout
-    runs-on: [self-hosted, b11]
-    steps:
-      - name: Build and analyze with SonarQube
-        uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
-      - name: NPM Install
-        run: npm install # Add your specific npm install command
-
-
-  Build-Push:
-    needs: Code-Analysis
-    runs-on: [self-hosted, b11]
-    steps:
       - name: Docker Login
         run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Docker build and push
+      - name: Build and Push Docker image
         run: |
-          # Run commands to build and push Docker images
-          docker build -t myntra .
-          docker tag myntra prashant6749/myntra:latest
-          docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
-          docker push prashant6749/myntra:latest
-        env:
-          DOCKER_CLI_ACI: 1
+          docker build -t prashant6749/myntra:${{ steps.set-tag.outputs.image_tag }} .
+          docker push prashant6749/myntra:${{ steps.set-tag.outputs.image_tag }}
 
-
-  Image-Scan:
-    needs: Build-Push
-    runs-on: [self-hosted, b11]
-    steps:
-      - name: Docker Scout Image Scan
-        run: |
-          docker-scout quickview prashant6749/myntra:latest
-          docker-scout cves prashant6749/myntra:latest
-
-  deploy:
-    needs: Image-Scan
-    runs-on: [self-hosted, b11] # Use your self-hosted runner label here
-    steps:
-      - name: Run the container
-        run: docker run -d --name myntra -p 3000:3000 prashant6749/myntra:latest
-
-      
+  
