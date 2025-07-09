@@ -31,7 +31,7 @@ jobs:
           IMAGE_URI=234299494388.dkr.ecr.ap-south-1.amazonaws.com/b11:${{ github.sha }}
           docker build -t $IMAGE_URI .
 
-      - name: Push image to Amazon ECR
+      - name: Push image to Amazon ECR recheck
         run: |
           IMAGE_URI=234299494388.dkr.ecr.ap-south-1.amazonaws.com/b11:${{ github.sha }}
           docker push $IMAGE_URI
