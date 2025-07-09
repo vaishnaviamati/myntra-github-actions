@@ -37,8 +37,11 @@ jobs:
           IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/b11:${{ github.sha }}
           docker build -t $IMAGE_URI .
 
-      - name: Push image to Amazon ECR
+      - name: Debug - Check if ECR repo exists
         run: |
-          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/b11:${{ github.sha }}
-          docker push $IMAGE_URI
+              echo "Checking if repo 'b11' exists in region ${{ secrets.AWS_REGION }}"
+              aws ecr describe-repositories --repository-names b11 --region ${{ secrets.AWS_REGION }}
+
+
+      
 
