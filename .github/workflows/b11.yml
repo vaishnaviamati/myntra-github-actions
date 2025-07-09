@@ -1,4 +1,4 @@
-name: Build and Push Docker Image to ECR
+name: Build and Push to ECR (hardcoded)
 
 on:
   workflow_dispatch:
@@ -7,15 +7,11 @@ on:
       - main
 
 jobs:
-  build-and-push-to-ecr:
+  push-to-ecr:
     runs-on: ubuntu-latest
 
-    permissions:
-      id-token: write  # For OIDC (optional if using static keys)
-      contents: read
-
     steps:
-      - name: Checkout code
+      - name: Checkout source code
         uses: actions/checkout@v3
 
       - name: Configure AWS credentials
@@ -23,25 +19,29 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ap-south-1
 
       - name: Log in to Amazon ECR
-        id: login-ecr
         run: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | \
-          docker login --username AWS --password-stdin \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          aws ecr get-login-password --region ap-south-1 | \
+          docker login --username AWS --password-stdin 234299494388.dkr.ecr.ap-south-1.amazonaws.com
 
-      - name: Build Docker image re-run
+      - name: Build Docker image
         run: |
-          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/b11:${{ github.sha }}
+          IMAGE_URI=234299494388.dkr.ecr.ap-south-1.amazonaws.com/b11:${{ github.sha }}
           docker build -t $IMAGE_URI .
 
-      - name: Debug - Check if ECR repo exists recheck
+      - name: Push image to Amazon ECR
         run: |
-              echo "Checking if repo 'b11' exists in region ${{ secrets.AWS_REGION }}"
-              aws ecr describe-repositories --repository-names b11 --region ${{ secrets.AWS_REGION }}
+          IMAGE_URI=234299494388.dkr.ecr.ap-south-1.amazonaws.com/b11:${{ github.sha }}
+          docker push $IMAGE_URI
 
-
-      
-
+      - name: Verify image in ECR
+        run: |
+          echo "Checking if image exists in ECR..."
+          aws ecr describe-images \
+            --repository-name b11 \
+            --image-ids imageTag=${{ github.sha }} \
+            --region ap-south-1 \
+          && echo "✅ Image exists in ECR" \
+          || (echo "❌ Image not found in ECR" && exit 1)
