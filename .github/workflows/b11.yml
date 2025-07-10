@@ -68,7 +68,7 @@ jobs:
           echo "Updated content:"
           cat "$FILE"
 
-      - name: Commit and push changes new
+      - name: Commit and push changes new sanket
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
