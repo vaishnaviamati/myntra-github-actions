@@ -47,31 +47,31 @@ jobs:
           || (echo "❌ Image not found in ECR" && exit 1)
 
 
-  # update-gitops:
-  #   runs-on: ubuntu-latest
-  #   needs: push-to-ecr
+  update-gitops:
+    runs-on: ubuntu-latest
+    needs: push-to-ecr
 
-  #   steps:
-  #     - name: Checkout GitOps repo
-  #       uses: actions/checkout@v3
-  #       with:
-  #         repository: Cloud-with-Prashant/gitopsinfra
-  #         token: ${{ secrets.GITOPS_TOKEN }}
-  #         ref: main
+    steps:
+      - name: Checkout GitOps repo
+        uses: actions/checkout@v3
+        with:
+          repository: Cloud-with-Prashant/gitopsinfra
+          token: ${{ secrets.GITOPS_TOKEN }}
+          ref: main
 
-  #     - name: Update deployment.yaml with new ECR image
-  #       run: |
-  #         FILE=deployment.yml
-  #         NEW_IMAGE=234299494388.dkr.ecr.ap-south-1.amazonaws.com/b11:${{ github.sha }}
-  #         echo "Updating image to $NEW_IMAGE in $FILE"
-  #         sed -i "s|image: .*|image: $NEW_IMAGE|" "$FILE"
-  #         echo "Updated content:"
-  #         cat "$FILE"
+      - name: Update deployment.yaml with new ECR image
+        run: |
+          FILE=deployment.yml
+          NEW_IMAGE=371952811305.dkr.ecr.ap-south-1.amazonaws.com/b12:${{ github.sha }}
+          echo "Updating image to $NEW_IMAGE in $FILE"
+          sed -i "s|image: .*|image: $NEW_IMAGE|" "$FILE"
+          echo "Updated content:"
+          cat "$FILE"
 
-  #     - name: Commit and push changes new sanket
-  #       run: |
-  #         git config --global user.name "GitHub Actions"
-  #         git config --global user.email "actions@github.com"
-  #         git commit -am "🔄 Update ECR image to ${{ github.sha }}"
-  #         git push origin main
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git commit -am "🔄 Update ECR image to ${{ github.sha }}"
+          git push origin main
 
