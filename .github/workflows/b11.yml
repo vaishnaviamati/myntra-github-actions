@@ -26,16 +26,16 @@ jobs:
       - name: Log in to Amazon ECR
         run: |
           aws ecr get-login-password --region ap-south-1 | \
-          docker login --username AWS --password-stdin 371952811305.dkr.ecr.ap-south-1.amazonaws.com
+          docker login --username AWS --password-stdin 855758428609.dkr.ecr.ap-south-1.amazonaws.com
 
       - name: Build Docker image
         run: |
-          IMAGE_URI=371952811305.dkr.ecr.ap-south-1.amazonaws.com/b12:${{ github.sha }}
+          IMAGE_URI=855758428609.dkr.ecr.ap-south-1.amazonaws.com/b12:${{ github.sha }}
           docker build -t $IMAGE_URI .
 
       - name: Push image to Amazon ECR 
         run: |
-          IMAGE_URI=371952811305.dkr.ecr.ap-south-1.amazonaws.com/b12:${{ github.sha }}
+          IMAGE_URI=855758428609.dkr.ecr.ap-south-1.amazonaws.com/b12:${{ github.sha }}
           docker push $IMAGE_URI
 
       - name: Verify image in ECR
@@ -57,14 +57,14 @@ jobs:
       - name: Checkout GitOps repo
         uses: actions/checkout@v3
         with:
-          repository: Cloud-with-Prashant/gitopsinfra
+          repository: vaishnaviamati/gitopsinfra
           token: ${{ secrets.GITOPS_TOKEN }}
           ref: main
 
       - name: Update deployment.yaml with new ECR image
         run: |
           FILE=deployment.yml
-          NEW_IMAGE=371952811305.dkr.ecr.ap-south-1.amazonaws.com/b12:${{ github.sha }}
+          NEW_IMAGE=855758428609.dkr.ecr.ap-south-1.amazonaws.com/b12:${{ github.sha }}
           echo "Updating image to $NEW_IMAGE in $FILE"
           sed -i "s|image: .*|image: $NEW_IMAGE|" "$FILE"
           echo "Updated content:"
